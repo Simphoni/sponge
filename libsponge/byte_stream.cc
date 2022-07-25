@@ -38,7 +38,6 @@ size_t ByteStream::write(const string &data) {
             buffer.replace(rear, len, data, 0, len);
             rear += len;
         }
-        
     } else {
         buffer.replace(rear, len, data, 0, len);
         rear += len;
