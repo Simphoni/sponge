@@ -71,3 +71,8 @@ To format (you'll need `clang-format`):
 To see all available targets,
 
     $ make help
+
+### tests
+
++ lab0  
+  `make check_lab0`
