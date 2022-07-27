@@ -11,9 +11,25 @@
 class StreamReassembler {
   private:
     // Your code here -- add private members as necessary.
+    class bitset {
+      private:
+        std::vector<unsigned int> a{};
 
+      public:
+        inline void init(size_t n) { a.resize(n / 32 + 1, 0); }
+        inline void set(size_t n) { a[n >> 5] |= 1u << (n & 31); }
+        inline void unset(size_t n) { a[n >> 5] &= (~0) ^ (1u << (n & 31)); }
+        inline int get(size_t n) { return (a[n >> 5] >> (n & 31)) & 1; }
+    } _used{};
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
+    std::string _buffer{};
+    std::string _written{};
+    size_t _unass_bytes{0};
+    size_t _pending_idx{0};
+    size_t _headptr{0};
+    size_t _endidx{0};
+    bool _eof{false};
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
