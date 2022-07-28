@@ -13,7 +13,7 @@ void DUMMY_CODE(Targs &&.../* unused */) {}
 
 using namespace std;
 
-#define WRAP(n) ((n) >= _capacity ? (n)-_capacity : (n))
+#define WRAP(n) ((n) >= _capacity ? (n) - _capacity : (n))
 
 StreamReassembler::StreamReassembler(const size_t capacity) : _output(capacity), _capacity(capacity) {
     _buffer.assign(_capacity, '\0');
