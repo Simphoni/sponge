@@ -6,16 +6,14 @@
 // automated checks run by `make check_lab2`.
 
 template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
+void DUMMY_CODE(Targs &&.../* unused */) {}
 
 using namespace std;
 
 //! Transform an "absolute" 64-bit sequence number (zero-indexed) into a WrappingInt32
 //! \param n The input absolute 64-bit sequence number
 //! \param isn The initial sequence number
-WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
-    return WrappingInt32{static_cast<uint32_t>(n) + isn.raw_value()};
-}
+WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) { return WrappingInt32{static_cast<uint32_t>(n) + isn.raw_value()}; }
 
 //! Transform a WrappingInt32 into an "absolute" 64-bit sequence number (zero-indexed)
 //! \param n The relative sequence number
@@ -31,8 +29,11 @@ WrappingInt32 wrap(uint64_t n, WrappingInt32 isn) {
 uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint) {
     uint64_t lower = static_cast<uint32_t>(n - isn), upper = 0;
     lower |= (checkpoint >> 32) << 32;
-    if (lower > checkpoint) lower -= 1ul << 32;
+    if (lower > checkpoint)
+        lower -= 1ul << 32;
     upper = lower + (1ul << 32);
-    if (lower > checkpoint) return upper;
-    else return (checkpoint - lower) < (upper - checkpoint) ? lower : upper;
+    if (lower > checkpoint)
+        return upper;
+    else
+        return (checkpoint - lower) < (upper - checkpoint) ? lower : upper;
 }

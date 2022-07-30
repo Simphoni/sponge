@@ -6,14 +6,28 @@
 // automated checks run by `make check_lab2`.
 
 template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
+void DUMMY_CODE(Targs &&.../* unused */) {}
 
 using namespace std;
 
+#include "iostream"
+
 void TCPReceiver::segment_received(const TCPSegment &seg) {
-    DUMMY_CODE(seg);
+    if (seg.header().syn)
+        _isn = std::make_optional<WrappingInt32>(seg.header().seqno);
+    if (!_isn)
+        return;  // SYN not received
+    _reassembler.push_substring(
+        seg.payload().copy(),
+        unwrap(seg.header().seqno + seg.header().syn, *_isn, _reassembler.stream_out().bytes_written()) - 1,
+        seg.header().fin);
 }
 
-optional<WrappingInt32> TCPReceiver::ackno() const { return {}; }
+optional<WrappingInt32> TCPReceiver::ackno() const {
+    if (!_isn)
+        return std::nullopt;
+    return make_optional<WrappingInt32>(*_isn + _reassembler.stream_out().bytes_written() +
+                                        _reassembler.stream_out().input_ended() + 1);  // FIN + SYN
+}
 
-size_t TCPReceiver::window_size() const { return {}; }
+size_t TCPReceiver::window_size() const { return _reassembler.stream_out().remaining_capacity(); }

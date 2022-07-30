@@ -24,7 +24,8 @@ void get_URL(const string &host, const string &path) {
     string recvd;
     while (true) {
         auto tmp = sock.read(300);
-        if (tmp.length() == 0) break;
+        if (tmp.length() == 0)
+            break;
         recvd += tmp;
     }
     size_t pos = recvd.find("\r\n\r\n");
