@@ -17,12 +17,12 @@ class ByteStream {
     // all, but if any of your tests are taking longer than a second,
     // that's a sign that you probably want to keep exploring
     // different approaches.
-    int cap{}, front{0}, rear{0};
+    int cap, front{0}, rear{0};
     size_t nread{0}, nwrite{0};
     std::string buffer{};
-    bool _eof{};
+    bool _eof{false};
 
-    bool _error{};  //!< Flag indicating that the stream suffered an error.
+    bool _error{false};  //!< Flag indicating that the stream suffered an error.
 
   public:
     //! Construct a stream with room for `capacity` bytes.

@@ -12,15 +12,9 @@ void DUMMY_CODE(Targs &&.../* unused */) {}
 
 using namespace std;
 
-ByteStream::ByteStream(const size_t capacity) {
+ByteStream::ByteStream(const size_t capacity) : cap(capacity) {
     // make sure rear < front on the next round
     buffer.assign(capacity + 1, '\0');
-    // index in [0,cap]
-    cap = capacity;
-    front = rear = 0;
-    nread = nwrite = 0;
-    _eof = false;
-    _error = false;
 }
 
 size_t ByteStream::write(const string &data) {

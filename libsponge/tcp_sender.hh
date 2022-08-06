@@ -15,8 +15,38 @@
 //! segments, keeps track of which segments are still in-flight,
 //! maintains the Retransmission Timer, and retransmits in-flight
 //! segments if the retransmission timer expires.
+#include "iostream"
+using namespace std;
 class TCPSender {
   private:
+    class Timer {
+      private:
+        bool _running{false};
+        unsigned int _remaining{0};
+
+      public:
+        Timer() {}
+        inline unsigned int remaining() { return _remaining; }
+        inline bool running() { return _running; }
+        inline void restart(unsigned int ms) {
+            _remaining = ms;
+            _running = true;
+        }
+        inline void stop() { _running = false; }
+        inline bool ellapse(unsigned int ms) {
+            if (!_running)
+                return false;
+            if (ms < _remaining) {
+                _remaining -= ms;
+                return false;
+            }
+            // timeout
+            _remaining = 0;
+            _running = false;
+            return true;
+        }
+    } clock{};
+
     //! our initial sequence number, the number for our SYN.
     WrappingInt32 _isn;
 
@@ -25,12 +55,20 @@ class TCPSender {
 
     //! retransmission timer for the connection
     unsigned int _initial_retransmission_timeout;
+    unsigned int _cur_retrans_timeout;
 
     //! outgoing stream of bytes that have not yet been sent
     ByteStream _stream;
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+
+    uint64_t _acked{0};
+    uint64_t _window_size{1};
+    std::queue<std::pair<uint64_t, TCPSegment>> _flying_packets{};
+    bool _fin_sent{false};
+
+    uint64_t _consecutive_timeout{0};
 
   public:
     //! Initialize a TCPSender
