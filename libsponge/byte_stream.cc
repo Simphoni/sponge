@@ -18,7 +18,7 @@ ByteStream::ByteStream(const size_t capacity) : cap(capacity) {
 }
 
 size_t ByteStream::write(const string &data) {
-    if (_eof)
+    if (_eof || _error)
         return 0;  // reject writing attempt
     int len = std::min(remaining_capacity(), data.length());
     nwrite += len;
@@ -41,6 +41,8 @@ size_t ByteStream::write(const string &data) {
 
 //! \param[in] len bytes will be copied from the output side of the buffer
 string ByteStream::peek_output(const size_t len) const {
+    if (_error)
+        return "";
     int l = std::min(len, buffer_size());
     string s;
     if (front <= rear) {
@@ -67,6 +69,8 @@ void ByteStream::pop_output(const size_t len) {
 //! \param[in] len bytes will be popped and returned
 //! \returns a string
 std::string ByteStream::read(const size_t len) {
+    if (_error)
+        return "";
     int l = std::min(len, buffer_size());
     nread += l;
     string s;

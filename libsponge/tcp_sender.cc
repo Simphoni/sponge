@@ -35,6 +35,7 @@ void TCPSender::fill_window() {
         packet.header().syn = 1;
         packet.header().seqno = _isn;
         _next_seqno = 1;
+        // into queue
         _flying_packets.push(make_pair(0, packet));
         _segments_out.push(packet);
         clock.restart(_initial_retransmission_timeout);
@@ -43,6 +44,7 @@ void TCPSender::fill_window() {
     auto p = _window_size;
     if (_window_size == 0)
         _window_size = 1;  // treat size `0` as `1`
+    fprintf(stderr, "??? %d\n", bytes_in_flight());    
     while (_next_seqno < _acked + _window_size && (_stream.buffer_size() || _stream.input_ended())) {
         TCPSegment packet;
         size_t len = min(_stream.buffer_size(), _acked + _window_size - _next_seqno);
@@ -51,21 +53,22 @@ void TCPSender::fill_window() {
             packet.header().fin = true;  // sent_bytes = len + 1
 
         string s = _stream.read(len);
+        fprintf(stderr, "--> %d\n", _stream.remaining_capacity());
         packet.payload() = Buffer(move(s));
-        packet.header().seqno = this->next_seqno();
+        packet.header().seqno = next_seqno();
+        // into queue
         _flying_packets.push(make_pair(_next_seqno, packet));
         _segments_out.push(packet);
 
         _next_seqno += len + packet.header().fin;
-
         if (packet.header().fin) {
             _fin_sent = true;
             break;
         }
     }
-    _window_size = p;
     if (!_flying_packets.empty() && !clock.running())
         clock.restart(_initial_retransmission_timeout);
+    _window_size = p;
 }
 
 //! \param ackno The remote receiver's ackno (acknowledgment number)
@@ -85,10 +88,13 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     if (!_fin_sent)
         _window_size = window_size;
     while (!_flying_packets.empty() &&
-           _flying_packets.front().first + _flying_packets.front().second.length_in_sequence_space() <= _acked)
-        _flying_packets.pop();  // make sure whole segment is acked
-    if (_flying_packets.empty())
+           _flying_packets.front().first + _flying_packets.front().second.length_in_sequence_space() <=
+               _acked) {  // make sure whole segment is acked
+        _flying_packets.pop();
+    }
+    if (_flying_packets.empty()) {
         clock.stop();
+    }
     fill_window();
 }
 
@@ -109,6 +115,6 @@ unsigned int TCPSender::consecutive_retransmissions() const { return _consecutiv
 void TCPSender::send_empty_segment() {
     TCPSegment packet;
     packet.payload() = Buffer("");
-    packet.header().seqno = this->next_seqno();
+    packet.header().seqno = next_seqno();
     _segments_out.push(packet);
 }
