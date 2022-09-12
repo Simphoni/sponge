@@ -26,8 +26,10 @@ void TCPConnection::push_from_sender() {
     auto &q = _sender.segments_out();
     while (q.size()) {
         auto &packet = q.front();
-        packet.header().ack = 1;
-        packet.header().ackno = _receiver.ackno().value();
+        if (_receiver.ackno().has_value()) {
+            packet.header().ack = 1;
+            packet.header().ackno = _receiver.ackno().value();
+        }
         packet.header().win = min(_receiver.window_size(), static_cast<size_t>(numeric_limits<uint16_t>::max()));
         if (packet.header().fin)
             _fin_seqno = std::make_optional(packet.header().seqno + packet.length_in_sequence_space());
@@ -105,7 +107,7 @@ size_t TCPConnection::write(const string &data) {
 
 //! \param[in] ms_since_last_tick number of milliseconds since the last call to this method
 void TCPConnection::tick(const size_t ms_since_last_tick) {
-    if (_status != 1 && _status != 2)
+    if (_status == 3)  // notice _status=0 might need to retrans SYN
         return;
     _time_since_last_segment_received += ms_since_last_tick;
     if (_status == 2 && _time_since_last_segment_received >= 10 * _cfg.rt_timeout) {
@@ -125,7 +127,8 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
         _sender.stream_in().set_error();
         _receiver.stream_out().set_error();
     } else {
-        _sender.fill_window();  // after _sender.tick(), new segments are appended
+        if (_status != 0)
+            _sender.fill_window();  // after _sender.tick(), new segments are appended
         push_from_sender();
     }
 }
@@ -135,7 +138,6 @@ void TCPConnection::end_input_stream() {
     _close_status |= 2;
     // calculate seqno of FIN
     _sender.fill_window();
-    // fprintf(stderr, "!!!! %p %d\n", (void *)this, _close_status);
     push_from_sender();
     if (_close_status == 7) {
         _status = 3 - _linger_after_streams_finish;

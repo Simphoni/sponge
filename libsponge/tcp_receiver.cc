@@ -13,13 +13,13 @@ using namespace std;
 #include "iostream"
 
 void TCPReceiver::segment_received(const TCPSegment &seg) {
-    if (!_isn && seg.header().syn)
+    if (!_isn.has_value() && seg.header().syn)
         _isn = std::make_optional<WrappingInt32>(seg.header().seqno);
-    if (!_isn)
+    if (!_isn.has_value())
         return;  // SYN not received
     _reassembler.push_substring(
         seg.payload().copy(),
-        unwrap(seg.header().seqno + seg.header().syn - 1, *_isn, _reassembler.stream_out().bytes_written()),
+        unwrap(seg.header().seqno + seg.header().syn - 1, _isn.value(), _reassembler.stream_out().bytes_written()),
         seg.header().fin);
 }
 

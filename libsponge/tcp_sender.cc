@@ -38,6 +38,8 @@ void TCPSender::fill_window() {
         // into queue
         _flying_packets.push(make_pair(0, packet));
         _segments_out.push(packet);
+        _consecutive_timeout = 0;
+        _cur_retrans_timeout = _initial_retransmission_timeout;
         clock.restart(_initial_retransmission_timeout);
         return;
     }
@@ -59,7 +61,7 @@ void TCPSender::fill_window() {
         _segments_out.push(packet);
 
         _next_seqno += len + packet.header().fin;
-        //fprintf(stderr, "%llu %d %lu\n", next_seqno(), _stream.input_ended(), _stream.buffer_size());
+        // fprintf(stderr, "%llu %d %lu\n", next_seqno(), _stream.input_ended(), _stream.buffer_size());
         if (packet.header().fin) {
             _fin_sent = true;
             break;
@@ -99,6 +101,8 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void TCPSender::tick(const size_t ms_since_last_tick) {
+    if (!clock.running())
+        return;
     if (clock.ellapse(ms_since_last_tick)) {  // resend
         if (_window_size > 0) {
             _consecutive_timeout++;

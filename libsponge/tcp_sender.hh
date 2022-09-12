@@ -56,6 +56,7 @@ class TCPSender {
     //! retransmission timer for the connection
     unsigned int _initial_retransmission_timeout;
     unsigned int _cur_retrans_timeout;
+    unsigned int _consecutive_timeout{0};
 
     //! outgoing stream of bytes that have not yet been sent
     ByteStream _stream;
@@ -67,8 +68,6 @@ class TCPSender {
     uint16_t _window_size{1};
     std::queue<std::pair<uint64_t, TCPSegment>> _flying_packets{};
     bool _fin_sent{false};
-
-    uint64_t _consecutive_timeout{0};
 
   public:
     //! Initialize a TCPSender

@@ -1,6 +1,4 @@
 cmake_minimum_required (VERSION 3.0.0)
-SET(CMAKE_C_COMPILER "/usr/bin/clang-14")
-SET(CMAKE_CXX_COMPILER "/usr/bin/clang++-14")
 cmake_policy (SET CMP0054 NEW)
 project (Sponge)
 
