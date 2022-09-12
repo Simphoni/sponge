@@ -11,6 +11,7 @@ if ((${IS_GNU_COMPILER} AND ${CXX_VERSION_LT_8}) OR (${IS_CLANG_COMPILER} AND ${
     message (FATAL_ERROR "You must compile this project with g++ >= 8 or clang >= 6.")
 endif ()
 if (${IS_CLANG_COMPILER})
+    message ("Using clang compiler.")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wloop-analysis")
 endif ()
 

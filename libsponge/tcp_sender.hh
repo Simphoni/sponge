@@ -64,7 +64,7 @@ class TCPSender {
     uint64_t _next_seqno{0};
 
     uint64_t _acked{0};
-    uint64_t _window_size{1};
+    uint16_t _window_size{1};
     std::queue<std::pair<uint64_t, TCPSegment>> _flying_packets{};
     bool _fin_sent{false};
 

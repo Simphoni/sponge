@@ -44,7 +44,6 @@ void TCPSender::fill_window() {
     auto p = _window_size;
     if (_window_size == 0)
         _window_size = 1;  // treat size `0` as `1`
-    fprintf(stderr, "??? %d\n", bytes_in_flight());    
     while (_next_seqno < _acked + _window_size && (_stream.buffer_size() || _stream.input_ended())) {
         TCPSegment packet;
         size_t len = min(_stream.buffer_size(), _acked + _window_size - _next_seqno);
@@ -53,7 +52,6 @@ void TCPSender::fill_window() {
             packet.header().fin = true;  // sent_bytes = len + 1
 
         string s = _stream.read(len);
-        fprintf(stderr, "--> %d\n", _stream.remaining_capacity());
         packet.payload() = Buffer(move(s));
         packet.header().seqno = next_seqno();
         // into queue
@@ -61,6 +59,7 @@ void TCPSender::fill_window() {
         _segments_out.push(packet);
 
         _next_seqno += len + packet.header().fin;
+        //fprintf(stderr, "%llu %d %lu\n", next_seqno(), _stream.input_ended(), _stream.buffer_size());
         if (packet.header().fin) {
             _fin_sent = true;
             break;

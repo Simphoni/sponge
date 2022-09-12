@@ -6,6 +6,8 @@
 #include "tcp_sender.hh"
 #include "tcp_state.hh"
 
+#include <chrono>
+
 //! \brief A complete endpoint of a TCP connection
 class TCPConnection {
   private:
@@ -22,7 +24,10 @@ class TCPConnection {
     bool _linger_after_streams_finish{true};
     int _time_since_last_segment_received{0};
     int _status{0}, _close_status{0};
-    std::optional<WrappingInt32> _sendseq_tail{std::nullopt};
+    std::optional<WrappingInt32> _fin_seqno{std::nullopt};
+
+    // custom method, push contents of _sender queue into *this queue
+    void push_from_sender();
 
   public:
     //! \name "Input" interface for the writer
