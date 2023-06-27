@@ -116,7 +116,7 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     }
     _sender.tick(ms_since_last_tick);
     if (_sender.consecutive_retransmissions() > TCPConfig::MAX_RETX_ATTEMPTS) {
-        cerr << "Warning: Unclean shutdown due to too many retrans\n";
+        cerr << "Warning: Unclean shutdown due to too many retransmissions.\n";
         _sender.send_empty_segment();
         auto &packet = _sender.segments_out().front();
         packet.header().rst = true;
@@ -147,23 +147,20 @@ void TCPConnection::end_input_stream() {
 
 void TCPConnection::connect() {
     _sender.fill_window();  // will generate a SYN if _next_seqno == 0
-    auto &q = _sender.segments_out();
-    q.front().header().win = min(_receiver.window_size(), static_cast<size_t>(numeric_limits<uint16_t>::max()));
-    _segments_out.push(q.front());
-    q.pop();
+    push_from_sender();
 }
 
 TCPConnection::~TCPConnection() {
     try {
         if (active()) {
             cerr << "Warning: Unclean shutdown of TCPConnection due to destruction\n";
+            // Your code here: need to send a RST segment to the peer
             _sender.send_empty_segment();
             auto &packet = _sender.segments_out().front();
             packet.header().rst = true;
             _segments_out.push(packet);
             _sender.segments_out().pop();
             _status = 3;
-            // Your code here: need to send a RST segment to the peer
         }
     } catch (const exception &e) {
         std::cerr << "Exception destructing TCP FSM: " << e.what() << std::endl;
