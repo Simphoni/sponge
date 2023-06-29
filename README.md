@@ -1,5 +1,9 @@
 For build prereqs, see [the CS144 VM setup instructions](https://web.stanford.edu/class/cs144/vm_howto).
 
+## tuntap
+
+For webget tests, run `make check_lab5` ahead to ensure that tuntaps are ready.
+
 ## Sponge quickstart
 
 To set up your build directory:
